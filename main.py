@@ -69,6 +69,40 @@ class BookmarkEditor(QWidget):
         if fname:
             self.current_file_path = fname
             self.file_path_label.setText(os.path.basename(fname))
+            self.load_existing_bookmarks()
+
+    def load_existing_bookmarks(self):
+        if not self.current_file_path:
+            return
+
+        if shutil.which("cpdf") is None:
+            return
+            
+        cmd = ["cpdf", "-list-bookmarks", "-utf8", self.current_file_path]
+        try:
+            result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            output = result.stdout
+        except subprocess.CalledProcessError:
+            return
+
+        if not output.strip():
+            return
+
+        lines = []
+        for line in output.splitlines():
+            match = re.search(r'^(\d+)\s+"(.*)"\s+(\d+)', line)
+            if match:
+                level = int(match.group(1))
+                title = match.group(2)
+                page = match.group(3)
+                
+                title = title.replace('\\"', '"')
+                
+                indent = "\t" * level
+                lines.append(f"{indent}{title} {page}")
+        
+        if lines:
+            self.text_edit.setPlainText("\n".join(lines))
 
     def indent_text(self):
         cursor = self.text_edit.textCursor()
