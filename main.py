@@ -224,7 +224,7 @@ class MainWindow(QMainWindow):
                 
             # Regex to find PageNum at end
             # Matches: (Level_Whitespace)(Title)(Whitespace)(PageNum)(Optional Trailing Whitespace)
-            match = re.search(r"^(\s*)(.*?)(\s+)(\d+)\s*$", line)
+            match = re.search(r"^(\s*)(.*?)(\s+)(-?\d+)\s*$", line)
             
             if match:
                 indent_str = match.group(1)
@@ -336,6 +336,9 @@ class MainWindow(QMainWindow):
         os.unlink(bookmark_file)
 
 if __name__ == "__main__":
+    # Fix for WebEngine crash on Linux (GBM/Vulkan issues)
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu"
+    
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
